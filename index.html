@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editable QR Code Image</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      position: relative;
+      width: 1167px;
+      height: 2154px;
+      background-size: cover;
+      border: 1px solid #ddd; /* Border for the container */
+    }
+
+    .text-area {
+      position: absolute;
+      top: 82px;
+      left: 82px;
+      font-size: 40px;
+      color: #16719d;
+      font-weight: bold;
+      width: 1000px;
+      outline: none;
+    }
+
+    .text-area-2 {
+      position: absolute;
+      top: 1620px;
+      left: 453px;
+      font-size: 40px;
+      color: #16719d;
+      font-weight: 600;
+      width: 1000px;
+      outline: none;
+    }
+
+    .qr-code {
+      position: absolute;
+      top: 1032px;
+      left: 329px;
+      width: 509px;
+      height: 509px;
+      border: 2px solid #000;
+    }
+
+    .input-file {
+      position: absolute;
+      top: 600px;
+      left: 200px;
+      opacity: 0;
+      width: 200px;
+      height: 200px;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .background-file {
+      position: absolute;
+      top: 500px;
+      left: 200px;
+      opacity: 0;
+      width: 200px;
+      height: 200px;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .code-input {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      font-size: 12px;
+      color: #ccc;
+      border: none;
+      background: transparent;
+      outline: none;
+      width: 100px;
+    }
+
+    .download-btn, .generate-preview-btn {
+      position: absolute;
+      top: 2100px;
+      left: 530px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+
+    .input-file-label, .background-file-label {
+      position: relative;
+      top: 1250px;
+      right: 20px;
+      bottom: 10px;
+      left: 400px;
+      border: 2px solid #000;
+      font-weight: bold;
+      color: #16719d;
+      font-size: 40px;
+    }
+
+    #preview {
+      margin-top: 30px;
+      border: 1px solid #ddd;
+      display: block;
+      max-width: 100%;
+      max-height: 500px;
+      margin: 20px auto;
+    }
+
+    /* 新增的说明部分样式 */
+    .instructions {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      font-size: 16px;
+      color: #333;
+      background-color: #fff;
+      padding: 15px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      width: 300px;
+      z-index: 10;
+      display: block; /* 默认显示说明 */
+    }
+
+    .instructions ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .instructions li {
+      margin-bottom: 10px;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      font-size: 20px;
+      color: #888;
+      cursor: pointer;
+    }
+
+    .close-btn:hover {
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+
+<!-- 说明部分 -->
+<div class="instructions" id="instructions">
+  <span class="close-btn" id="closeBtn" style="color: red; font-size: 50px;">&times;</span> <!-- 关闭按钮 -->
+  <h3>使用说明：</h3>
+  <ul>
+    <li>1、NO.5 号收款码、全平台 收款码以及左下角“请点此处修改编码”文字，都是可以删除文字修改的，请按要求修改；</li>
+    <li>2、使用该工具前请先准备好一个宽1167px，高2154px的背景图和一个收款二维码图；</li>
+    <li>3、修改并且上传好图片后，点击下载图片即可。</li>
+  </ul>
+</div>
+
+<!-- 主体内容 -->
+<div class="container" id="container">
+  <div contenteditable="true" class="text-area">NO.5 号收款码（北京）</div>
+  <div contenteditable="true" class="text-area-2">全平台 收款码</div> <!-- 新的输入区域 -->
+  <img id="qr-code" class="qr-code" src="path_to_your_default_qr_code.png" alt="QR Code">
+  <label for="input-file" class="input-file-label" style="font-size: 25px;">点击上传二维码</label><br />
+  <input type="file" id="input-file" class="input-file" accept="image/*">
+  <label for="background-file" class="background-file-label" style="font-size: 25px;top: 1100px;">点击上传背景图片</label>
+  <input type="file" id="background-file" class="background-file" accept="image/*">
+  <input type="text" class="code-input" value="编码:241215" placeholder="请点此处修改编码">
+  
+  <!-- 按钮 -->
+  <button class="generate-preview-btn" id="generatePreviewBtn">生成预览</button>
+  <button class="download-btn" id="downloadBtn">下载预览图片</button>
+</div>
+
+<!-- 预览区域 -->
+<img id="preview" src="" alt="Preview Image">
+
+<script>
+  const inputFile = document.getElementById('input-file');
+  const backgroundFile = document.getElementById('background-file');
+  const qrCode = document.getElementById('qr-code');
+  const container = document.getElementById('container');
+  const textArea = document.querySelector('.text-area');
+  const textArea2 = document.querySelector('.text-area-2');
+  const codeInput = document.querySelector('.code-input');
+  const preview = document.getElementById('preview');
+  const instructions = document.getElementById('instructions');
+  const closeBtn = document.getElementById('closeBtn');
+
+  let backgroundImage = null;
+  let qrCodeImage = null;
+
+  // 上传二维码图片
+  inputFile.addEventListener('change', function(event) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      qrCodeImage = e.target.result; // Store qrCode image
+      updatePreview();
+    };
+    reader.readAsDataURL(event.target.files[0]);
+  });
+
+  // 上传背景图片
+  backgroundFile.addEventListener('change', function(event) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      backgroundImage = e.target.result; // Store background image
+      updatePreview();
+    };
+    reader.readAsDataURL(event.target.files[0]);
+  });
+
+  // 更新预览图
+  function updatePreview() {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Set canvas size equal to container size
+    canvas.width = container.offsetWidth;
+    canvas.height = container.offsetHeight;
+
+    // Draw background if available
+    if (backgroundImage) {
+      const img = new Image();
+      img.src = backgroundImage;
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        // Draw text (from contenteditable divs)
+        ctx.font = 'bold 40px Arial';
+        ctx.fillStyle = '#16719d';
+        ctx.fillText(textArea.innerText, 82, 82); // Position the first text
+        ctx.fillText(textArea2.innerText, 453, 1620); // Position the second text
+
+        // Draw QR code if available
+        if (qrCodeImage) {
+          const qrCodeImg = new Image();
+          qrCodeImg.src = qrCodeImage;
+          qrCodeImg.onload = () => {
+            ctx.drawImage(qrCodeImg, 329, 1032, 509, 509); // Draw QR code
+            preview.src = canvas.toDataURL('image/png'); // Update the preview image
+          };
+        }
+      };
+    }
+  }
+
+  // 下载预览图片
+  function downloadImage() {
+    const link = document.createElement('a');
+    link.download = 'edited-image.png';
+    link.href = preview.src; // Use the preview image URL
+    link.click();
+  }
+
+  // 按钮事件绑定
+  document.getElementById('generatePreviewBtn').addEventListener('click', updatePreview);
+  document.getElementById('downloadBtn').addEventListener('click', downloadImage);
+
+  // 关闭说明按钮
+  closeBtn.addEventListener('click', () => {
+    instructions.style.display = 'none'; // 隐藏说明部分
+  });
+</script>
+
+</body>
+</html>
