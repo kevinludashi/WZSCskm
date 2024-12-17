@@ -1,288 +1,476 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Editable QR Code Image</title>
-  <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      font-family: Arial, sans-serif;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片文字合成工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* 上对齐 */
+            min-height: 100vh;
+            margin: 0;
+            overflow: auto; /* 允许滚动 */
+        }
 
-    .container {
-      position: relative;
-      width: 1167px;
-      height: 2154px;
-      background-size: cover;
-      border: 1px solid #ddd; /* Border for the container */
-    }
+        /* 容器保持底部内容的布局，并避免与控制条重叠 */
+        .container {
+            margin-top: 140px; /* 给控制条留出空间 */
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 100%;  /* 限制容器的最大宽度 */
+        }
 
-    .text-area {
-      position: absolute;
-      top: 82px;
-      left: 82px;
-      font-size: 40px;
-      color: #16719d;
-      font-weight: bold;
-      width: 1000px;
-      outline: none;
-    }
+        input[type="file"], input[type="range"], input[type="color"], button {
+            margin: 10px 0;
+            padding: 8px;
+            font-size: 16px;
+        }
 
-    .text-area-2 {
-      position: absolute;
-      top: 1620px;
-      left: 453px;
-      font-size: 40px;
-      color: #16719d;
-      font-weight: 600;
-      width: 1000px;
-      outline: none;
-    }
+        canvas {
+            border: 1px solid #ddd;
+            margin-top: 230px;
+            cursor: crosshair;
+        }
 
-    .qr-code {
-      position: absolute;
-      top: 1032px;
-      left: 329px;
-      width: 509px;
-      height: 509px;
-      border: 2px solid #000;
-    }
+        /* 控制条固定在页面顶部 */
+        .controls {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000; /* 确保控制条位于最上层 */
+            text-align: center;
+        }
 
-    .input-file {
-      position: absolute;
-      top: 600px;
-      left: 200px;
-      opacity: 0;
-      width: 200px;
-      height: 200px;
-      cursor: pointer;
-      overflow: hidden;
-    }
+        label {
+            margin-right: 10px;
+        }
 
-    .background-file {
-      position: absolute;
-      top: 500px;
-      left: 200px;
-      opacity: 0;
-      width: 200px;
-      height: 200px;
-      cursor: pointer;
-      overflow: hidden;
-    }
-
-    .code-input {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      font-size: 12px;
-      color: #ccc;
-      border: none;
-      background: transparent;
-      outline: none;
-      width: 100px;
-    }
-
-    .download-btn, .generate-preview-btn {
-      position: absolute;
-      top: 2100px;
-      left: 530px;
-      padding: 10px 20px;
-      cursor: pointer;
-    }
-
-    .input-file-label, .background-file-label {
-      position: relative;
-      top: 1250px;
-      right: 20px;
-      bottom: 10px;
-      left: 400px;
-      border: 2px solid #000;
-      font-weight: bold;
-      color: #16719d;
-      font-size: 40px;
-    }
-
-    #preview {
-      margin-top: 30px;
-      border: 1px solid #ddd;
-      display: block;
-      max-width: 100%;
-      max-height: 500px;
-      margin: 20px auto;
-    }
-
-    /* 说明部分样式 */
-			.instructions {
-			  position: fixed;
-			  top: 20%; /* 垂直居中 */
-			  left: 30%; /* 水平居中 */
-			  transform: translate(-50%, -50%); /* 使用 transform 精确居中 */
-			  font-size: 16px;
-			  color: #333;
-			  background-color: #fff;
-			  padding: 15px;
-			  border-radius: 5px;
-			  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-			  width: 50%;
-			  z-index: 10;
-			  display: block; /* 默认显示说明 */
-			}
-			
-			.instructions ul {
-			  margin: 0;
-			  padding-left: 0; /* 去掉左侧内边距 */
-			  list-style-type: none; /* 去掉默认的项目符号 */
-			}
-			
-            .instructions li {
-			  margin-bottom: 15px; /* 增加每行说明之间的间距 */
-			  padding-left: 30px; /* 为每行文字增加左间距 */
-			}
-
-			.instructions h3 {
-			  text-align: center; /* 标题居中 */
-			  font-size: 30px;
-			  color: red;
-			  margin-top: 10px; /* 增加标题的上间距 */
-			}
-			
-			.close-btn {
-			  position: absolute;
-			  top: 5px;
-			  right: 20px;
-			  font-size: 20px;
-			  color: #888;
-			  cursor: pointer;
-			}
-			/* 说明部分样式 */
-  </style>
+        /* 控制缩放条 */
+        #zoom-slider {
+            width: 100%;
+            margin-top: 20px;
+        }
+		
+		/* 说明部分样式 */
+					.instructions {
+					  position: fixed;
+					  top: 50%; /* 垂直居中 */
+					  left: 50%; /* 水平居中 */
+					  transform: translate(-50%, -50%); /* 使用 transform 精确居中 */
+					  font-size: 16px;
+					  color: #333;
+					  background-color: #fff;
+					  padding: 15px;
+					  border-radius: 5px;
+					  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+					  width: 80%;
+					  z-index: 9999;
+					  display: block; /* 默认显示说明 */
+					}
+					
+					.instructions ul {
+					  margin: 0;
+					  padding-left: 0; /* 去掉左侧内边距 */
+					  list-style-type: none; /* 去掉默认的项目符号 */
+					}
+					
+		            .instructions li {
+					  margin-bottom: 15px; /* 增加每行说明之间的间距 */
+					  padding-left: 30px; /* 为每行文字增加左间距 */
+					}
+		
+					.instructions h3 {
+					  text-align: center; /* 标题居中 */
+					  font-size: 30px;
+					  color: red;
+					  margin-top: 10px; /* 增加标题的上间距 */
+					}
+					
+					.close-btn {
+					  position: absolute;
+					  top: 5px;
+					  right: 20px;
+					  font-size: 20px;
+					  color: #888;
+					  cursor: pointer;
+					}
+	/* 说明部分样式 */
+    </style>
 </head>
 <body>
+	
+	<!-- 说明部分 -->
+			<div class="instructions" id="instructions">
+			  <span class="close-btn" id="closeBtn" style="color: red; font-size: 50px;">&times;</span> <!-- 关闭按钮 -->
+			  <h3>使用前必读：</h3>
+			  <ul>
+				<li>1、由于网页托管于国际服务器，可能会出现加载不出来的问题（该服器很安全，可放心使用）；</li>
+			    <li>2、当页面出现BUG或者打不开时请尝试多刷新几次（刷新20+次都属于正常）；</li>
+			    <li>3、当刷新页面20+次后依然无法打开时可尝试复制网址更换浏览器打开；</li>
+			    <li>4、微信打开时可能会提醒有风险，请忽略，也可能会显示打不开，请尝试多刷新几次就能打开；</li>
+				<li>5、网页部分内容来自网络，请自行甄别，博主不承担任何风险；</li>
+				<li>10、先点击第6项，下载所需素材zip压缩包，下载后解压；</li>
+				<li>7、制作时先上传背景图，再添加文字，最后添加二维码，如顺序错了请刷新网页重新来；</li>
+				<li>8、所有制作完成后，点击下载合成图片即可；</li>
+				<li>9、添加的文字和图片可随意移动位置和放大缩小以及字体加粗和颜色；</li>
+				<li>10、<a href="https://coco241031.lanzout.com/b00wm6seba" target="_blank">点击此处获取最新背景图片</a>，提取码:eufm，下载解压使用。</li>
+			  </ul>
+			</div>
+	<!-- 说明部分 -->
+	
+    <div class="container">
+        <h1>图片文字合成工具</h1>
 
-<!-- 说明部分 -->
-<div class="instructions" id="instructions">
-  <span class="close-btn" id="closeBtn" style="color: red; font-size: 50px;">&times;</span> <!-- 关闭按钮 -->
-  <h3>使用说明：</h3>
-  <ul>
-    <li>1、NO.5 号收款码、全平台 收款码以及左下角“请点此处修改编码”文字，都是可以删除文字修改的，请按要求修改；</li>
-    <li>2、使用该工具前请先准备好一个宽1167px，高2154px的背景图和一个收款二维码图；</li>
-    <li>3、修改并且上传好图片后，点击下载图片即可。</li>
-    <li>4、<a href="https://img.alicdn.com/imgextra/i2/2873818587/O1CN01u0gRt12DIu2KkW7sy_!!2873818587.jpg" target="_blank">点击此处获取最新背景图片</a>，长按图片保存图片到相册。</li>
-    <li>5、双指捏放可以放大缩小网页</li>
-    <li>6、缩小网页后先填写左上角“NO.5 号收款码”，再填写左下角编码，再上传背景，再上传二维码，“全平台收款码”也可以修改</li>
-  </ul>
-</div>
+        <div class="controls">
+            <!-- 上传背景图片 -->
+            <div style="display: inline-block;">
+                <!-- 隐藏的文件输入框 -->
+                <input type="file" id="image-upload" accept="image/*" style="display: none;" onchange="handleFileChange()">
+                <!-- 自定义的按钮 -->
+                <button type="button" style="background-color: #16719D; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer;" onclick="document.getElementById('image-upload').click();">
+                    先上传背景图
+                </button>
+            </div>
+            <br/>
 
-<!-- 主体内容 -->
-<div class="container" id="container">
-  <div contenteditable="true" class="text-area">NO.5 号收款码（北京）</div>
-  <div contenteditable="true" class="text-area-2">全平台 收款码</div> <!-- 新的输入区域 -->
-  <img id="qr-code" class="qr-code" src="path_to_your_default_qr_code.png" alt="QR Code">
-  <label for="input-file" class="input-file-label" style="font-size: 25px;">点击上传二维码</label><br />
-  <input type="file" id="input-file" class="input-file" accept="image/*">
-  <label for="background-file" class="background-file-label" style="font-size: 25px;top: 1100px;">点击上传背景图片</label>
-  <input type="file" id="background-file" class="background-file" accept="image/*">
-  <input type="text" class="code-input" value="编码:241215" placeholder="请点此处修改编码">
-  
-  <!-- 按钮 -->
-  <button class="generate-preview-btn" id="generatePreviewBtn">生成预览</button>
-  <button class="download-btn" id="downloadBtn">下载预览图片</button>
-</div>
+            
+            <!-- 文字输入框 -->
+            <input type="text" id="text-input" placeholder="输入文字" />
+        
+            <!-- 文字大小调整 -->
+            <label for="font-size" style="margin-left: 30px; margin-right: 0px;">文字大小:</label>
+            <input type="range" id="font-size" min="10" max="100" value="30">
+        
+            <!-- 文字颜色选择 -->
+            <label for="font-color" style="margin-left: 30px; margin-right: 0px;">文字颜色:</label>
+            <input type="color" id="font-color" value="#16719D">
+        
+            <!-- 是否加粗 -->
+            <label for="bold-text" style="margin-left: 30px; margin-right: 0px;">加粗文字:</label>
+            <input type="checkbox" id="bold-text">
+        	<br/>
+        
+            <!-- 添加文字按钮 -->
+            <button id="add-text-btn" style="margin-left: 30px; margin-right: 0px; background-color: #28a745; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer;">添加文字</button>
+        	
+        
+            <!-- 删除文字按钮 -->
+            <button id="delete-text-btn" style="margin-left: 30px; margin-right: 0px; background-color: red; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer;">删除文字</button>
+        	<br>
+        	
+        	<!-- 上传其他图片 -->
+        	<div style="display: inline-block;">
+        	    <!-- 隐藏的文件输入框 -->
+        	    <input type="file" id="overlay-image-upload" accept="image/*" style="vertical-align: middle; display: none;" onchange="handleFileChange()">
+        	    <!-- 自定义的按钮 -->
+        	    <button type="button" style="background-color: #16719D; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer;" onclick="document.getElementById('overlay-image-upload').click();">
+        	        最后上传二维码
+        	    </button>
+        	</div>
+        	<br />
+        
+        	
+        	<!-- 图片缩放控制条 -->
+        	<label for="zoom-slider" style="margin-left: 30px; margin-right: 0px;">缩放图片:</label>
+        	<input type="range" id="zoom-slider" min="0.1" max="3" step="0.01" value="1" style="width: 12%; max-width: 400px;">
+        	
+        	
+        
+            <!-- 删除图片按钮 -->
+            <button id="delete-image-btn" style="margin-left: 30px; margin-right: 0px; background-color: red; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer;">删除图片</button>
+        	<br/>
+        
+            <!-- 下载按钮 -->
+            <button id="download-btn" style="margin-left: 30px; margin-right: 0px; background-color: #28a745; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer;">下载合成图片</button>
+			
+			<!-- 唤出使用说明按钮 -->
+			<button id="show-instructions-btn" style="margin-left: 30px; margin-right: 0px; background-color: #FFC0CB; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer;">
+			    唤出使用说明
+			</button>
+        </div>
 
-<!-- 预览区域 -->
-<img id="preview" src="" alt="Preview Image">
 
-<script>
-  const inputFile = document.getElementById('input-file');
-  const backgroundFile = document.getElementById('background-file');
-  const qrCode = document.getElementById('qr-code');
-  const container = document.getElementById('container');
-  const textArea = document.querySelector('.text-area');
-  const textArea2 = document.querySelector('.text-area-2');
-  const codeInput = document.querySelector('.code-input');
-  const preview = document.getElementById('preview');
-  const instructions = document.getElementById('instructions');
-  const closeBtn = document.getElementById('closeBtn');
+        <!-- 显示合成结果 -->
+        <canvas id="canvas"></canvas>
+    </div>
 
-  let backgroundImage = null;
-  let qrCodeImage = null;
+    <script>
+        // 获取页面元素
+        const imageUpload = document.getElementById('image-upload');
+        const overlayImageUpload = document.getElementById('overlay-image-upload');
+        const textInput = document.getElementById('text-input');
+        const fontSizeInput = document.getElementById('font-size');
+        const fontColorInput = document.getElementById('font-color');
+        const boldTextInput = document.getElementById('bold-text');
+        const addTextBtn = document.getElementById('add-text-btn');
+        const deleteTextBtn = document.getElementById('delete-text-btn');
+        const deleteImageBtn = document.getElementById('delete-image-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const zoomSlider = document.getElementById('zoom-slider');
 
-  // 上传二维码图片
-  inputFile.addEventListener('change', function(event) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      qrCodeImage = e.target.result; // Store qrCode image
-      updatePreview();
-    };
-    reader.readAsDataURL(event.target.files[0]);
-  });
+        let img = new Image();
+        let overlayImg = new Image();  // 用于叠加的图片
+        let imgWidth, imgHeight, overlayImgWidth, overlayImgHeight;
+        let overlayImgScale = 1;  // 控制叠加图片的缩放比例
+        let overlayImgX = 0, overlayImgY = 0;  // 叠加图片的初始位置
+        let texts = [];  // 存储文字的数组
+        let selectedTextIndex = -1;  // 当前选中的文字索引
+        let isDraggingText = false;  // 是否正在拖动文字
+        let dragOffsetX, dragOffsetY;  // 拖动偏移量
+        let isImageDragging = false;  // 是否正在拖动图片
+        let imageOffsetX, imageOffsetY;  // 图片的偏移量
 
-  // 上传背景图片
-  backgroundFile.addEventListener('change', function(event) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      backgroundImage = e.target.result; // Store background image
-      updatePreview();
-    };
-    reader.readAsDataURL(event.target.files[0]);
-  });
+        // 监听上传的背景图片
+        imageUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    img.onload = function() {
+                        imgWidth = img.width; // 使用原始图片宽度
+                                        imgHeight = img.height; // 使用原始图片高度
+                        
+                                        // 设置画布为背景图片的原始尺寸
+                                        canvas.width = imgWidth;
+                                        canvas.height = imgHeight;
+                                        ctx.drawImage(img, 0, 0, imgWidth, imgHeight); // 绘制背景图
+                                    };
+                                    img.src = event.target.result;
+                                };
+                                reader.readAsDataURL(file);
+                            }
+                        });
 
-  // 更新预览图
-  function updatePreview() {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+        // 监听上传的叠加图片
+        overlayImageUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    overlayImg.onload = function() {
+                        // 设置叠加图片的初始位置和大小
+                        overlayImgWidth = overlayImg.width;
+                        overlayImgHeight = overlayImg.height;
+                        updateCanvas();  // 更新画布
+                    };
+                    overlayImg.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
 
-    // Set canvas size equal to container size
-    canvas.width = container.offsetWidth;
-    canvas.height = container.offsetHeight;
+       // 添加文字
+       addTextBtn.addEventListener('click', () => {
+           const text = textInput.value;
+           if (text) {
+               const fontSize = fontSizeInput.value;
+               const fontColor = fontColorInput.value;
+               const isBold = boldTextInput.checked ? 'bold' : 'normal';
+       
+               // 创建文字对象
+               const newText = {
+                   text,
+                   fontSize,
+                   fontColor,
+                   isBold,
+                   x: imgWidth / 2, // 初始居中
+                   y: imgHeight / 2 + (texts.length * 40), // 每个文字间隔40px
+               };
+       
+               // 添加文字对象到数组
+               texts.push(newText);
+               
+               // 清空文字输入框
+               textInput.value = '';  // 清空输入框
+               
+               updateCanvas();  // 更新画布
+           }
+       });
 
-    // Draw background if available
-    if (backgroundImage) {
-      const img = new Image();
-      img.src = backgroundImage;
-      img.onload = () => {
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-        // Draw text (from contenteditable divs)
-        ctx.font = 'bold 40px Arial';
-        ctx.fillStyle = '#16719d';
-        ctx.fillText(textArea.innerText, 82, 82); // Position the first text
-        ctx.fillText(textArea2.innerText, 453, 1620); // Position the second text
+        // 绘制画布上的内容
+        function updateCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);  // 清除画布
+            ctx.drawImage(img, 0, 0, imgWidth, imgHeight);  // 重新绘制背景图片
 
-        // Draw QR code if available
-        if (qrCodeImage) {
-          const qrCodeImg = new Image();
-          qrCodeImg.src = qrCodeImage;
-          qrCodeImg.onload = () => {
-            ctx.drawImage(qrCodeImg, 329, 1032, 509, 509); // Draw QR code
-            preview.src = canvas.toDataURL('image/png'); // Update the preview image
-          };
+            // 绘制叠加图片（等比例缩放并移动）
+            if (overlayImg.src) {
+                ctx.drawImage(overlayImg, overlayImgX, overlayImgY, overlayImgWidth * overlayImgScale, overlayImgHeight * overlayImgScale);
+            }
+
+            // 绘制所有文字
+            texts.forEach((textObj, index) => {
+                ctx.font = `${textObj.isBold} ${textObj.fontSize}px Arial`;
+                ctx.fillStyle = textObj.fontColor;
+                const textWidth = ctx.measureText(textObj.text).width;
+                const textX = textObj.x - textWidth / 2;
+                ctx.fillText(textObj.text, textX, textObj.y);
+            });
         }
-      };
-    }
-  }
 
-  // 下载预览图片
-  function downloadImage() {
-    const link = document.createElement('a');
-    link.download = 'edited-image.png';
-    link.href = preview.src; // Use the preview image URL
-    link.click();
-  }
+        // 更新图片的缩放比例
+        zoomSlider.addEventListener('input', (e) => {
+            overlayImgScale = parseFloat(e.target.value);
+            updateCanvas();  // 更新画布
+        });
 
-  // 按钮事件绑定
-  document.getElementById('generatePreviewBtn').addEventListener('click', updatePreview);
-  document.getElementById('downloadBtn').addEventListener('click', downloadImage);
+        // 文字点击事件：选中并进入编辑模式
+        canvas.addEventListener('click', (e) => {
+            const mouseX = e.offsetX;
+            const mouseY = e.offsetY;
 
-  // 关闭说明按钮
-  closeBtn.addEventListener('click', () => {
-    instructions.style.display = 'none'; // 隐藏说明部分
-  });
-</script>
+            texts.forEach((textObj, index) => {
+                const textWidth = ctx.measureText(textObj.text).width;
+                const textHeight = parseInt(textObj.fontSize);
+                if (mouseX >= textObj.x - textWidth / 2 && mouseX <= textObj.x + textWidth / 2 &&
+                    mouseY >= textObj.y - textHeight && mouseY <= textObj.y) {
+                    selectedTextIndex = index;  // 设置当前选中的文字
+                    textInput.value = textObj.text;
+                    fontSizeInput.value = textObj.fontSize;
+                    fontColorInput.value = textObj.fontColor;
+                    boldTextInput.checked = textObj.isBold === 'bold';
+                    return;
+                }
+            });
+        });
 
+        // 更新选中文字的样式
+        function updateSelectedTextStyle() {
+            if (selectedTextIndex !== -1) {
+                const textObj = texts[selectedTextIndex];
+                const fontSize = fontSizeInput.value;
+                const fontColor = fontColorInput.value;
+                const isBold = boldTextInput.checked ? 'bold' : 'normal';
+
+                // 更新文字样式
+                textObj.fontSize = fontSize;
+                textObj.fontColor = fontColor;
+                textObj.isBold = isBold;
+
+                updateCanvas();  // 更新画布显示
+            }
+        }
+
+        // 监听文字大小、颜色、加粗的变化
+        fontSizeInput.addEventListener('input', updateSelectedTextStyle);
+        fontColorInput.addEventListener('input', updateSelectedTextStyle);
+        boldTextInput.addEventListener('change', updateSelectedTextStyle);
+
+        // 删除选中的文字
+        deleteTextBtn.addEventListener('click', () => {
+            if (selectedTextIndex !== -1) {
+                texts.splice(selectedTextIndex, 1);  // 删除选中的文字
+                selectedTextIndex = -1;  // 清除选中状态
+                updateCanvas();  // 重新绘制画布
+            }
+        });
+
+        // 删除叠加图片
+        deleteImageBtn.addEventListener('click', () => {
+            overlayImg = new Image();  // 清空叠加图片
+            overlayImgWidth = 0;
+            overlayImgHeight = 0;
+            overlayImgScale = 1;
+            overlayImgX = 0;
+            overlayImgY = 0;
+            updateCanvas();  // 更新画布
+        });
+
+        // 监听图片拖动事件：拖动叠加图片
+        canvas.addEventListener('mousedown', (e) => {
+            const mouseX = e.offsetX;
+            const mouseY = e.offsetY;
+
+            // 检查是否点击了叠加图片
+            if (mouseX >= overlayImgX && mouseX <= overlayImgX + overlayImgWidth * overlayImgScale &&
+                mouseY >= overlayImgY && mouseY <= overlayImgY + overlayImgHeight * overlayImgScale) {
+                isImageDragging = true;
+                imageOffsetX = mouseX - overlayImgX;
+                imageOffsetY = mouseY - overlayImgY;
+                canvas.style.cursor = 'move';
+            } else {
+                // 检查是否点击了文字
+                texts.forEach((textObj, index) => {
+                    const textWidth = ctx.measureText(textObj.text).width;
+                    const textHeight = parseInt(textObj.fontSize);
+                    if (mouseX >= textObj.x - textWidth / 2 && mouseX <= textObj.x + textWidth / 2 &&
+                        mouseY >= textObj.y - textHeight && mouseY <= textObj.y) {
+                        isDraggingText = true;
+                        dragOffsetX = mouseX - textObj.x;
+                        dragOffsetY = mouseY - textObj.y;
+                        selectedTextIndex = index;
+                        return;
+                    }
+                });
+            }
+        });
+
+        // 监听鼠标移动事件：拖动文字或图片
+        canvas.addEventListener('mousemove', (e) => {
+            if (isImageDragging) {
+                const mouseX = e.offsetX;
+                const mouseY = e.offsetY;
+
+                // 更新图片位置
+                overlayImgX = mouseX - imageOffsetX;
+                overlayImgY = mouseY - imageOffsetY;
+                updateCanvas();  // 更新画布
+            } else if (isDraggingText && selectedTextIndex !== -1) {
+                const mouseX = e.offsetX;
+                const mouseY = e.offsetY;
+
+                // 更新文字位置
+                const textObj = texts[selectedTextIndex];
+                textObj.x = mouseX - dragOffsetX;
+                textObj.y = mouseY - dragOffsetY;
+                updateCanvas();  // 更新画布
+            }
+        });
+
+        // 监听鼠标释放事件：结束拖动
+        canvas.addEventListener('mouseup', () => {
+            isImageDragging = false;
+            isDraggingText = false;
+            canvas.style.cursor = 'default';
+        });
+
+        // 下载合成图片
+        downloadBtn.addEventListener('click', () => {
+            const dataUrl = canvas.toDataURL('image/png');  // 获取画布的图片数据
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = '合成图片.png';  // 下载的图片名称
+            a.click();  // 触发下载
+        });
+		
+		// 关闭说明按钮
+					closeBtn.addEventListener('click', () => {
+					  instructions.style.display = 'none'; // 隐藏说明部分
+					});
+					
+		// 获取唤出说明按钮
+		const showInstructionsBtn = document.getElementById('show-instructions-btn');
+		
+		// 监听点击事件，显示说明部分
+		showInstructionsBtn.addEventListener('click', () => {
+		    instructions.style.display = 'block';  // 显示说明部分
+		});
+
+		
+    </script>
 </body>
 </html>
