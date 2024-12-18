@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -25,7 +26,7 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            width: 100%;
+            width: 90%;
             max-width: 100%;  /* 限制容器的最大宽度 */
         }
 
@@ -44,9 +45,10 @@
         /* 控制条固定在页面顶部 */
         .controls {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
+                top: 0;
+                left: 50%;
+                transform: translateX(-50%); /* 水平居中 */
+                width: 90%; /* 你可以调整宽度百分比 */
             background-color: rgba(255, 255, 255, 0.9);
             padding: 20px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -153,7 +155,8 @@
         
             <!-- 文字大小调整 -->
             <label for="font-size" style="margin-left: 30px; margin-right: 0px;">文字大小:</label>
-            <input type="range" id="font-size" min="10" max="100" value="30">
+            <input type="number" id="font-size" min="10" max="200" value="45" step="1">
+
         
             <!-- 文字颜色选择 -->
             <label for="font-color" style="margin-left: 30px; margin-right: 0px;">文字颜色:</label>
