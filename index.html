@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -222,7 +223,7 @@
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const zoomSlider = document.getElementById('zoom-slider');
-
+        
         let img = new Image();
         let overlayImg = new Image();  // 用于叠加的图片
         let imgWidth, imgHeight, overlayImgWidth, overlayImgHeight;
@@ -234,7 +235,7 @@
         let dragOffsetX, dragOffsetY;  // 拖动偏移量
         let isImageDragging = false;  // 是否正在拖动图片
         let imageOffsetX, imageOffsetY;  // 图片的偏移量
-
+        
         // 监听上传的背景图片
         imageUpload.addEventListener('change', (e) => {
             const file = e.target.files[0];
@@ -243,19 +244,19 @@
                 reader.onload = function(event) {
                     img.onload = function() {
                         imgWidth = img.width; // 使用原始图片宽度
-                                        imgHeight = img.height; // 使用原始图片高度
-                        
-                                        // 设置画布为背景图片的原始尺寸
-                                        canvas.width = imgWidth;
-                                        canvas.height = imgHeight;
-                                        ctx.drawImage(img, 0, 0, imgWidth, imgHeight); // 绘制背景图
-                                    };
-                                    img.src = event.target.result;
-                                };
-                                reader.readAsDataURL(file);
-                            }
-                        });
-
+                        imgHeight = img.height; // 使用原始图片高度
+        
+                        // 设置画布为背景图片的原始尺寸
+                        canvas.width = imgWidth;
+                        canvas.height = imgHeight;
+                        ctx.drawImage(img, 0, 0, imgWidth, imgHeight); // 绘制背景图
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
         // 监听上传的叠加图片
         overlayImageUpload.addEventListener('change', (e) => {
             const file = e.target.files[0];
@@ -266,6 +267,11 @@
                         // 设置叠加图片的初始位置和大小
                         overlayImgWidth = overlayImg.width;
                         overlayImgHeight = overlayImg.height;
+        
+                        // 计算叠加图片的居中位置
+                        overlayImgX = (canvas.width - overlayImgWidth) / 2;
+                        overlayImgY = (canvas.height - overlayImgHeight) / 2;
+        
                         updateCanvas();  // 更新画布
                     };
                     overlayImg.src = event.target.result;
@@ -273,46 +279,45 @@
                 reader.readAsDataURL(file);
             }
         });
-
-       // 添加文字
-       addTextBtn.addEventListener('click', () => {
-           const text = textInput.value;
-           if (text) {
-               const fontSize = fontSizeInput.value;
-               const fontColor = fontColorInput.value;
-               const isBold = boldTextInput.checked ? 'bold' : 'normal';
-       
-               // 创建文字对象
-               const newText = {
-                   text,
-                   fontSize,
-                   fontColor,
-                   isBold,
-                   x: imgWidth / 2, // 初始居中
-                   y: imgHeight / 2 + (texts.length * 40), // 每个文字间隔40px
-               };
-       
-               // 添加文字对象到数组
-               texts.push(newText);
-               
-               // 清空文字输入框
-               textInput.value = '';  // 清空输入框
-               
-               updateCanvas();  // 更新画布
-           }
-       });
-
-
+        
+        // 添加文字
+        addTextBtn.addEventListener('click', () => {
+            const text = textInput.value;
+            if (text) {
+                const fontSize = fontSizeInput.value;
+                const fontColor = fontColorInput.value;
+                const isBold = boldTextInput.checked ? 'bold' : 'normal';
+        
+                // 创建文字对象
+                const newText = {
+                    text,
+                    fontSize,
+                    fontColor,
+                    isBold,
+                    x: imgWidth / 10, // 初始居中
+                    y: imgHeight / 30 + (texts.length * 40), // 每个文字间隔40px
+                };
+        
+                // 添加文字对象到数组
+                texts.push(newText);
+        
+                // 清空文字输入框
+                textInput.value = '';  // 清空输入框
+        
+                updateCanvas();  // 更新画布
+            }
+        });
+        
         // 绘制画布上的内容
         function updateCanvas() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);  // 清除画布
             ctx.drawImage(img, 0, 0, imgWidth, imgHeight);  // 重新绘制背景图片
-
+        
             // 绘制叠加图片（等比例缩放并移动）
             if (overlayImg.src) {
                 ctx.drawImage(overlayImg, overlayImgX, overlayImgY, overlayImgWidth * overlayImgScale, overlayImgHeight * overlayImgScale);
             }
-
+        
             // 绘制所有文字
             texts.forEach((textObj, index) => {
                 ctx.font = `${textObj.isBold} ${textObj.fontSize}px Arial`;
@@ -322,18 +327,18 @@
                 ctx.fillText(textObj.text, textX, textObj.y);
             });
         }
-
+        
         // 更新图片的缩放比例
         zoomSlider.addEventListener('input', (e) => {
             overlayImgScale = parseFloat(e.target.value);
             updateCanvas();  // 更新画布
         });
-
+        
         // 文字点击事件：选中并进入编辑模式
         canvas.addEventListener('click', (e) => {
             const mouseX = e.offsetX;
             const mouseY = e.offsetY;
-
+        
             texts.forEach((textObj, index) => {
                 const textWidth = ctx.measureText(textObj.text).width;
                 const textHeight = parseInt(textObj.fontSize);
@@ -348,7 +353,7 @@
                 }
             });
         });
-
+        
         // 更新选中文字的样式
         function updateSelectedTextStyle() {
             if (selectedTextIndex !== -1) {
@@ -356,21 +361,21 @@
                 const fontSize = fontSizeInput.value;
                 const fontColor = fontColorInput.value;
                 const isBold = boldTextInput.checked ? 'bold' : 'normal';
-
+        
                 // 更新文字样式
                 textObj.fontSize = fontSize;
                 textObj.fontColor = fontColor;
                 textObj.isBold = isBold;
-
+        
                 updateCanvas();  // 更新画布显示
             }
         }
-
+        
         // 监听文字大小、颜色、加粗的变化
         fontSizeInput.addEventListener('input', updateSelectedTextStyle);
         fontColorInput.addEventListener('input', updateSelectedTextStyle);
         boldTextInput.addEventListener('change', updateSelectedTextStyle);
-
+        
         // 删除选中的文字
         deleteTextBtn.addEventListener('click', () => {
             if (selectedTextIndex !== -1) {
@@ -379,7 +384,7 @@
                 updateCanvas();  // 重新绘制画布
             }
         });
-
+        
         // 删除叠加图片
         deleteImageBtn.addEventListener('click', () => {
             overlayImg = new Image();  // 清空叠加图片
@@ -390,78 +395,90 @@
             overlayImgY = 0;
             updateCanvas();  // 更新画布
         });
-
-        // 监听图片拖动事件：拖动叠加图片
-        canvas.addEventListener('mousedown', (e) => {
-            const mouseX = e.offsetX;
-            const mouseY = e.offsetY;
-
+        
+        // 监听拖动事件：拖动叠加图片和文字
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            return { x, y };
+        }
+        
+        // 监听鼠标/触摸开始事件：拖动叠加图片或文字
+        function onDragStart(e) {
+            const { x, y } = getMousePos(e);
+        
             // 检查是否点击了叠加图片
-            if (mouseX >= overlayImgX && mouseX <= overlayImgX + overlayImgWidth * overlayImgScale &&
-                mouseY >= overlayImgY && mouseY <= overlayImgY + overlayImgHeight * overlayImgScale) {
+            if (x >= overlayImgX && x <= overlayImgX + overlayImgWidth * overlayImgScale &&
+                y >= overlayImgY && y <= overlayImgY + overlayImgHeight * overlayImgScale) {
                 isImageDragging = true;
-                imageOffsetX = mouseX - overlayImgX;
-                imageOffsetY = mouseY - overlayImgY;
+                imageOffsetX = x - overlayImgX;
+                imageOffsetY = y - overlayImgY;
                 canvas.style.cursor = 'move';
-            } else {
-                // 检查是否点击了文字
-                texts.forEach((textObj, index) => {
-                    const textWidth = ctx.measureText(textObj.text).width;
-                    const textHeight = parseInt(textObj.fontSize);
-                    if (mouseX >= textObj.x - textWidth / 2 && mouseX <= textObj.x + textWidth / 2 &&
-                        mouseY >= textObj.y - textHeight && mouseY <= textObj.y) {
-                        isDraggingText = true;
-                        dragOffsetX = mouseX - textObj.x;
-                        dragOffsetY = mouseY - textObj.y;
-                        selectedTextIndex = index;
-                        return;
-                    }
-                });
+                return;
             }
-        });
-
-        // 监听鼠标移动事件：拖动文字或图片
-        canvas.addEventListener('mousemove', (e) => {
+        
+            // 检查是否点击了文字
+            texts.forEach((textObj, index) => {
+                const textWidth = ctx.measureText(textObj.text).width;
+                const textHeight = parseInt(textObj.fontSize);
+                if (x >= textObj.x - textWidth / 2 && x <= textObj.x + textWidth / 2 &&
+                    y >= textObj.y - textHeight && y <= textObj.y) {
+                    isDraggingText = true;
+                    dragOffsetX = x - textObj.x;
+                    dragOffsetY = y - textObj.y;
+                    selectedTextIndex = index;
+                    canvas.style.cursor = 'move';
+                    return;
+                }
+            });
+        }
+        
+        // 监听鼠标/触摸移动事件：拖动叠加图片或文字
+        function onDragMove(e) {
             if (isImageDragging) {
-                const mouseX = e.offsetX;
-                const mouseY = e.offsetY;
-
-                // 更新图片位置
-                overlayImgX = mouseX - imageOffsetX;
-                overlayImgY = mouseY - imageOffsetY;
+                const { x, y } = getMousePos(e);
+                overlayImgX = x - imageOffsetX;
+                overlayImgY = y - imageOffsetY;
                 updateCanvas();  // 更新画布
-            } else if (isDraggingText && selectedTextIndex !== -1) {
-                const mouseX = e.offsetX;
-                const mouseY = e.offsetY;
-
-                // 更新文字位置
+            } else if (isDraggingText) {
+                const { x, y } = getMousePos(e);
                 const textObj = texts[selectedTextIndex];
-                textObj.x = mouseX - dragOffsetX;
-                textObj.y = mouseY - dragOffsetY;
+                textObj.x = x - dragOffsetX;
+                textObj.y = y - dragOffsetY;
                 updateCanvas();  // 更新画布
             }
-        });
-
-        // 监听鼠标释放事件：结束拖动
-        canvas.addEventListener('mouseup', () => {
+        }
+        
+        // 监听鼠标/触摸结束事件：结束拖动
+        function onDragEnd() {
             isImageDragging = false;
             isDraggingText = false;
             canvas.style.cursor = 'default';
+        }
+        
+        // 绑定事件监听器
+        canvas.addEventListener('mousedown', onDragStart);
+        canvas.addEventListener('mousemove', onDragMove);
+        canvas.addEventListener('mouseup', onDragEnd);
+        
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            onDragStart(e.touches[0]);
         });
-
-        // 下载合成图片
-        downloadBtn.addEventListener('click', () => {
-            const dataUrl = canvas.toDataURL('image/png');  // 获取画布的图片数据
-            const a = document.createElement('a');
-            a.href = dataUrl;
-            a.download = '合成图片.png';  // 下载的图片名称
-            a.click();  // 触发下载
+        
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            onDragMove(e.touches[0]);
         });
+        
+        canvas.addEventListener('touchend', onDragEnd);
+		
 		
 		// 关闭说明按钮
-					closeBtn.addEventListener('click', () => {
-					  instructions.style.display = 'none'; // 隐藏说明部分
-					});
+		closeBtn.addEventListener('click', () => {
+		instructions.style.display = 'none'; // 隐藏说明部分
+		});
 					
 		// 获取唤出说明按钮
 		const showInstructionsBtn = document.getElementById('show-instructions-btn');
@@ -470,7 +487,15 @@
 		showInstructionsBtn.addEventListener('click', () => {
 		    instructions.style.display = 'block';  // 显示说明部分
 		});
-
+		
+		// 下载合成图片
+		downloadBtn.addEventListener('click', () => {
+		    const dataUrl = canvas.toDataURL('image/png');  // 获取画布的图片数据
+		    const a = document.createElement('a');
+		    a.href = dataUrl;
+		    a.download = '合成图片.png';  // 下载的图片名称
+		    a.click();  // 触发下载
+		});
 		
     </script>
 </body>
