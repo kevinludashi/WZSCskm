@@ -30,6 +30,24 @@
             max-width: 100%;  /* 限制容器的最大宽度 */
         }
 
+	/* 针对小屏幕进行优化 */
+        @media (max-width: 768px) {
+            body {
+                display: flex;
+                justify-content: center; /* 水平居中 */
+                align-items: center;  /* 垂直居中 */
+                height: 100vh;  /* 确保 body 高度为 100% */
+                padding: 0;
+                margin: 0;
+            }
+        
+            .container {
+                width: 90%;  /* 手机端宽度为 90% */
+                padding: 10px;  /* 调整内边距，防止内容溢出 */
+                margin-top: 0;  /* 去除顶部间距 */
+            }
+        }
+
         input[type="file"], input[type="range"], input[type="color"], button {
             margin: 10px 0;
             padding: 8px;
